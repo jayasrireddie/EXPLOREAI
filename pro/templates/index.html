@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Logo Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Logo Generator</h1>
+        <input type="text" id="prompt" placeholder="Enter a logo description">
+        <button onclick="generateLogo()">Generate Logo</button>
+        <div id="result">
+            <img id="logoImage" style="display: none;">
+        </div>
+    </div>
+
+    <script>
+        function generateLogo() {
+            let prompt = document.getElementById("prompt").value;
+            let formData = new FormData();
+            formData.append("prompt", prompt);
+
+            fetch("/generate", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image) {
+                    document.getElementById("logoImage").src = "data:image/png;base64," + data.image;
+                    document.getElementById("logoImage").style.display = "block";
+                } else {
+                    alert("Failed to generate logo.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>
