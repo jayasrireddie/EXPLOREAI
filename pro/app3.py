@@ -1,37 +1,39 @@
-from flask import Flask, render_template, request, jsonify
+import streamlit as st
 import requests
 import base64
+from io import BytesIO
+from PIL import Image
 
-app = Flask(__name__)
-
-# Hugging Face API Key
-API_KEY = "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"
+# Hugging Face API Details
+API_KEY = "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"
 API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
 HEADERS = {"Authorization": f"Bearer {API_KEY}"}
 
+# Function to Generate Logo
 def generate_logo(prompt):
-    """Send request to Hugging Face API"""
     payload = {"inputs": prompt}
     response = requests.post(API_URL, headers=HEADERS, json=payload)
 
     if response.status_code == 200:
-        return base64.b64encode(response.content).decode('utf-8')  # Convert image to base64
+        img = Image.open(BytesIO(response.content))  # Convert response to image
+        return img
     else:
         return None
 
-@app.route("/")
-def index():
-    return render_template("index2.html")
+# Streamlit UI
+st.title("AI Logo Generator")
+st.write("Enter a prompt below to generate a custom logo.")
 
-@app.route("/generate", methods=["POST"])
-def generate():
-    prompt = request.form.get("prompt")
-    image_data = generate_logo(prompt)
+# Input field for user prompt
+prompt = st.text_input("Enter your logo description:")
 
-    if image_data:
-        return jsonify({"image": image_data})
+# Generate button
+if st.button("Generate Logo"):
+    if prompt:
+        image = generate_logo(prompt)
+        if image:
+            st.image(image, caption="Generated Logo", use_column_width=True)
+        else:
+            st.error("Failed to generate image. Check API key and try again.")
     else:
-        return jsonify({"error": "Failed to generate image."})
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        st.warning("Please enter a prompt before generating.")
